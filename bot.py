@@ -15,7 +15,10 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 TELEGRAM_TOKEN   = os.environ.get("TELEGRAM_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 GROQ_API_KEY     = os.environ.get("GROQ_API_KEY", "")
-CHECK_INTERVAL   = int(os.environ.get("CHECK_INTERVAL", "3"))  # scan every 3 min
+CHECK_INTERVAL   = int(os.environ.get("CHECK_INTERVAL", "3"))
+SCORE_NEEDED     = int(os.environ.get("SCORE_NEEDED", "3"))
+MIN_BACKTEST     = int(os.environ.get("MIN_BACKTEST", "35"))
+ALLOW_ASIAN      = os.environ.get("ALLOW_ASIAN", "true").lower() == "true"
 
 if not all([TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, GROQ_API_KEY]):
     raise RuntimeError("Missing env vars - check Railway Variables tab")
@@ -29,9 +32,9 @@ SYMBOL        = "GC=F"          # XAU/USD Gold Futures
 SYMBOL_NAME   = "XAU/USD Gold"
 PRICE_MIN     = 3000
 PRICE_MAX     = 8000
-MIN_GAP_MIN   = 45              # min minutes between signals
-SCORE_NEEDED  = 6               # moderate: needs 6 points to fire
-MIN_BACKTEST  = 48              # minimum backtest win rate %
+MIN_GAP_MIN   = int(os.environ.get("MIN_GAP_MIN", "30"))
+
+
 
 # Scalping-specific SL/TP multipliers (tight, fast)
 SL_ATR_MULT   = 0.8             # tight stop loss for scalping
@@ -274,7 +277,7 @@ def get_session():
     if 12 <= hour < 15:   return "Overlap", True       # best session
     if 15 <= hour < 20:   return "New York", True
     if 6 <= hour < 7:     return "London Open", True   # high volatility open
-    return "Asian/Off-hours", False                    # lower quality session
+    return "Asian/Off-hours", ALLOW_ASIAN                    # lower quality session
 
 
 def is_news_time():
